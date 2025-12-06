@@ -5,11 +5,13 @@ import PaymentsPage from "@/components/features/PaymentsPage";
 import TransactionsPage, { type Transaction } from "@/components/features/TransactionsPage";
 import RytMindDashboard from "@/components/features/RytMindDashboard";
 import ReceiptUploadModal from "@/components/features/ReceiptUploadModal";
+import ManualEntryModal from "@/components/features/ManualEntryModal";
 import JournalModal from "@/components/features/JournalModal";
 import SpendingAnalysisPage from "@/components/features/SpendingAnalysisPage";
 import BudgetPlannerPage from "@/components/features/BudgetPlannerPage";
 import JournallingPage from "@/components/features/JournallingPage";
 import FinancialTherapistPage from "@/components/features/FinancialTherapistPage";
+import InsightsPage from "@/components/features/InsightsPage";
 import { useToast } from "@/hooks/use-toast";
 
 const initialTransactions: Transaction[] = [
@@ -22,17 +24,18 @@ const initialTransactions: Transaction[] = [
   { id: "7", merchant: "Uniqlo", date: "Dec 1, 2024", time: "4:45 PM", category: "Shopping", amount: -189.00, processed: true, emotion: "Planned", emotionEmoji: "📝" },
 ];
 
-type ActiveView = "payments" | "transactions" | "rytmind" | "analysis" | "budget" | "journalling" | "therapist";
+type ActiveView = "payments" | "transactions" | "rytmind" | "insights" | "analysis" | "budget" | "journalling" | "therapist";
 
 const Index = () => {
   const { toast } = useToast();
-  const [activeTab, setActiveTab] = useState<"payments" | "transactions" | "rytmind">("payments");
+  const [activeTab, setActiveTab] = useState<"payments" | "transactions" | "rytmind" | "insights">("payments");
   const [activeView, setActiveView] = useState<ActiveView>("payments");
   const [transactions, setTransactions] = useState<Transaction[]>(initialTransactions);
   const [receiptModalId, setReceiptModalId] = useState<string | null>(null);
+  const [manualEntryModalId, setManualEntryModalId] = useState<string | null>(null);
   const [journalModalId, setJournalModalId] = useState<string | null>(null);
 
-  const handleTabChange = (tab: "payments" | "transactions" | "rytmind") => {
+  const handleTabChange = (tab: "payments" | "transactions" | "rytmind" | "insights") => {
     setActiveTab(tab);
     setActiveView(tab);
   };
@@ -54,17 +57,44 @@ const Index = () => {
     });
   };
 
-  const handleReceiptComplete = (transactionId: string) => {
+  const handleReceiptComplete = (transactionId: string, items: Array<{ name: string; price: number; category: string }>) => {
+    if (items.length === 0) {
+      // If no items extracted, just mark as processed
+      setTransactions((prev) =>
+        prev.map((t) =>
+          t.id === transactionId
+            ? { ...t, processed: true, emotion: "Analyzed", emotionEmoji: "🔍" }
+            : t
+        )
+      );
+      toast({
+        title: "Receipt Analyzed",
+        description: "Your spending insight has been recorded.",
+      });
+      return;
+    }
+
+    // Find the transaction and update it with items stored in the transaction
+    // Keep the original amount unchanged, just store items for breakdown
     setTransactions((prev) =>
       prev.map((t) =>
         t.id === transactionId
-          ? { ...t, processed: true, emotion: "Analyzed", emotionEmoji: "🔍" }
+          ? { 
+              ...t, 
+              processed: true, 
+              emotion: "Analyzed", 
+              emotionEmoji: "🔍",
+              category: items[0].category,
+              // Keep original amount - don't change it
+              items: items, // Store items in transaction for breakdown display
+            }
           : t
       )
     );
+
     toast({
       title: "Receipt Analyzed",
-      description: "Your spending insight has been recorded.",
+      description: `${items.length} item(s) extracted and categorized successfully.`,
     });
   };
 
@@ -109,7 +139,7 @@ const Index = () => {
   };
 
   // Determine if we should show the navbar (hide for sub-pages)
-  const showNavbar = ["payments", "transactions", "rytmind"].includes(activeView);
+  const showNavbar = ["payments", "transactions", "rytmind", "insights"].includes(activeView);
   const showFAB = activeView !== "therapist";
 
   return (
@@ -125,7 +155,7 @@ const Index = () => {
           <TransactionsPage
             transactions={transactions}
             onReceiptUpload={setReceiptModalId}
-            onManualEntry={setJournalModalId}
+            onManualEntry={setManualEntryModalId}
           />
         )}
 
@@ -134,8 +164,12 @@ const Index = () => {
             transactions={transactions}
             onFeatureClick={handleFeatureClick}
             onReceiptUpload={setReceiptModalId}
-            onManualEntry={setJournalModalId}
+            onManualEntry={setManualEntryModalId}
           />
+        )}
+
+        {activeView === "insights" && (
+          <InsightsPage transactions={transactions} />
         )}
 
         {activeView === "analysis" && (
@@ -147,7 +181,7 @@ const Index = () => {
         )}
 
         {activeView === "journalling" && (
-          <JournallingPage onBack={handleBackToRytMind} />
+          <JournallingPage onBack={handleBackToRytMind} transactions={transactions} />
         )}
 
         {activeView === "therapist" && (
@@ -163,6 +197,17 @@ const Index = () => {
           transactionId={receiptModalId}
           onClose={() => setReceiptModalId(null)}
           onComplete={handleReceiptComplete}
+        />
+      )}
+
+      {manualEntryModalId && (
+        <ManualEntryModal
+          transactionId={manualEntryModalId}
+          onClose={() => setManualEntryModalId(null)}
+          onComplete={handleReceiptComplete}
+          initialItems={
+            transactions.find(t => t.id === manualEntryModalId)?.items
+          }
         />
       )}
 

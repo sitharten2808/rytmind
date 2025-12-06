@@ -1,9 +1,9 @@
-import { CreditCard, List, Brain, User } from "lucide-react";
+import { CreditCard, List, Brain, User, TrendingUp } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface NavbarProps {
-  activeTab: "payments" | "transactions" | "rytmind";
-  onTabChange: (tab: "payments" | "transactions" | "rytmind") => void;
+  activeTab: "payments" | "transactions" | "rytmind" | "insights";
+  onTabChange: (tab: "payments" | "transactions" | "rytmind" | "insights") => void;
 }
 
 const Navbar = ({ activeTab, onTabChange }: NavbarProps) => {
@@ -11,6 +11,7 @@ const Navbar = ({ activeTab, onTabChange }: NavbarProps) => {
     { id: "payments" as const, label: "Payments", icon: CreditCard },
     { id: "transactions" as const, label: "Transactions", icon: List },
     { id: "rytmind" as const, label: "RytMind", icon: Brain },
+    { id: "insights" as const, label: "Insights", icon: TrendingUp },
   ];
 
   return (
@@ -19,10 +20,13 @@ const Navbar = ({ activeTab, onTabChange }: NavbarProps) => {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg gradient-primary flex items-center justify-center">
-              <span className="text-primary-foreground font-bold text-sm">R</span>
+            <div className="w-8 h-8 rounded-lg gradient-ryt flex items-center justify-center shadow-lg relative overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-accent/20 animate-pulse"></div>
+              <span className="text-primary-foreground font-bold text-sm relative z-10">R</span>
             </div>
-            <span className="font-semibold text-foreground">Ryt Bank</span>
+            <span className="font-bold text-foreground text-lg bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+              Ryt Bank
+            </span>
           </div>
 
           {/* Center Tabs */}
