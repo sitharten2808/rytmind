@@ -3,11 +3,10 @@ import { action } from "./_generated/server";
 import { api } from "./_generated/api";
 
 // Your Lindy webhook URLs - one for each period
-// Set these in your Convex dashboard under Settings > Environment Variables
 const LINDY_URLS: Record<string, string> = {
-  "7days": process.env.LINDY_URL_7DAYS || "",
-  "14days": process.env.LINDY_URL_14DAYS || "",
-  "30days": process.env.LINDY_URL_30DAYS || "",
+  "7days": "https://public.lindy.ai/api/v1/webhooks/lindy/f395ecf9-f07b-4005-bd26-31662f9ee4a7",
+  "14days": "https://public.lindy.ai/api/v1/webhooks/lindy/1b308af1-e69f-4c3c-a3c0-24ec9f68fbc0",
+  "30days": "https://public.lindy.ai/api/v1/webhooks/lindy/56f4e405-c6ac-4538-8e8f-4a679c00215d",
 };
 
 // Action to trigger Lindy analysis for a specific period
@@ -117,8 +116,13 @@ export const triggerAnalysis = action({
 
       const result = await response.json();
       
-      // If Lindy returns the analysis directly (synchronous)
-      if (result.aiAnalysis) {
+      console.log("Lindy response:", JSON.stringify(result, null, 2));
+      
+      // Lindy might return in different formats - handle all cases
+      const aiAnalysis = result.aiAnalysis || result;
+      
+      // Check if we got valid AI analysis
+      if (aiAnalysis && aiAnalysis.summary && aiAnalysis.topInsight) {
         // Store the insight
         await ctx.runMutation(api.insights.store, {
           periodStart: startTimestamp,
@@ -127,18 +131,25 @@ export const triggerAnalysis = action({
           totalSpending,
           transactionCount: transactions.length,
           categoryBreakdown,
-          aiAnalysis: result.aiAnalysis,
+          aiAnalysis: {
+            summary: aiAnalysis.summary,
+            topInsight: aiAnalysis.topInsight,
+            spendingPatterns: aiAnalysis.spendingPatterns || [],
+            emotionalTriggers: aiAnalysis.emotionalTriggers || [],
+          },
         });
         
         return { success: true, message: "Analysis complete" };
       }
 
-      // If Lindy processes async (webhook callback), just return
-      return { success: true, message: "Analysis triggered, waiting for callback" };
+      // If Lindy hasn't processed yet or returned unexpected format
+      console.warn("Unexpected Lindy response format:", result);
+      return { success: false, message: "Lindy returned unexpected format" };
       
-    } catch (error) {
+    } catch (error: any) {
       console.error("Lindy API error:", error);
-      throw new Error("Failed to trigger Lindy analysis");
+      console.error("Error details:", error.message);
+      throw new Error(`Failed to trigger Lindy analysis: ${error.message}`);
     }
   },
 });

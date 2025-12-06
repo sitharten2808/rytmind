@@ -41,7 +41,7 @@ const STALE_THRESHOLDS: Record<PeriodType, number> = {
 
 const Index = () => {
   const { toast } = useToast();
-  const [activeTab, setActiveTab] = useState<"payments" | "transactions" | "rytmind">("payments");
+  const [activeTab, setActiveTab] = useState<"payments" | "transactions" | "rytmind" | "insights">("payments");
   const [activeView, setActiveView] = useState<ActiveView>("payments");
   const [receiptModalId, setReceiptModalId] = useState<string | null>(null);
   const [journalModalId, setJournalModalId] = useState<string | null>(null);
@@ -54,14 +54,19 @@ const Index = () => {
   // Convex queries
   const convexTransactions = useQuery(api.transactions.list);
   const insight = useQuery(api.insights.getLatest, { periodType: selectedPeriod });
+
+  // Debug logging
+  console.log("Transactions:", convexTransactions?.length || 0);
+  console.log("Insight:", insight);
+  console.log("Selected Period:", selectedPeriod);
   
   // Convex mutations and actions
   const createTransaction = useMutation(api.transactions.create);
   const updateEmotion = useMutation(api.transactions.updateEmotion);
   const seedData = useMutation(api.seed.seedData);
   
-  // Action to generate analysis (calls Lindy or generates locally)
-  const generateAnalysis = useAction(api.lindy.generateLocalAnalysis);
+  // Action to generate analysis - calls Lindy AI (Convex is now deployed to cloud!)
+  const generateAnalysis = useAction(api.lindy.triggerAnalysis);
 
   // Refresh/generate analysis for current period (defined first with useCallback)
   const handleRefreshAnalysis = useCallback(async (showToast = true) => {
@@ -144,7 +149,7 @@ const Index = () => {
     emotionEmoji: t.emotionEmoji,
   }));
 
-  const handleTabChange = (tab: "payments" | "transactions" | "rytmind") => {
+  const handleTabChange = (tab: "payments" | "transactions" | "rytmind" | "insights") => {
     setActiveTab(tab);
     setActiveView(tab);
   };
