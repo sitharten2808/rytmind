@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { X, Camera, Upload, CheckCircle, Image as ImageIcon, FileImage, Loader2 } from "lucide-react";
+import { X, Upload, CheckCircle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -134,9 +134,6 @@ const ReceiptUploadModal = ({ transactionId, onClose, onComplete }: ReceiptUploa
   const [extractedItems, setExtractedItems] = useState<ReceiptItem[]>([]);
   const [extractedText, setExtractedText] = useState<string>("");
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const streamRef = useRef<MediaStream | null>(null);
-  const [isCameraMode, setIsCameraMode] = useState(false);
 
   const handleFileSelect = async (file: File) => {
     if (!file.type.startsWith('image/')) {
@@ -176,50 +173,6 @@ const ReceiptUploadModal = ({ transactionId, onClose, onComplete }: ReceiptUploa
     }
   };
 
-  const startCamera = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ 
-        video: { facingMode: 'environment' } // Use back camera on mobile
-      });
-      streamRef.current = stream;
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        setIsCameraMode(true);
-      }
-    } catch (error) {
-      console.error('Error accessing camera:', error);
-      alert('Unable to access camera. Please check permissions.');
-    }
-  };
-
-  const stopCamera = () => {
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach(track => track.stop());
-      streamRef.current = null;
-    }
-    setIsCameraMode(false);
-  };
-
-  const capturePhoto = async () => {
-    if (!videoRef.current) return;
-
-    const canvas = document.createElement('canvas');
-    canvas.width = videoRef.current.videoWidth;
-    canvas.height = videoRef.current.videoHeight;
-    const ctx = canvas.getContext('2d');
-    
-    if (ctx) {
-      ctx.drawImage(videoRef.current, 0, 0);
-      canvas.toBlob(async (blob) => {
-        if (blob) {
-          const file = new File([blob], 'receipt.jpg', { type: 'image/jpeg' });
-          stopCamera();
-          await processImage(file);
-        }
-      }, 'image/jpeg', 0.9);
-    }
-  };
-
   const handleComplete = () => {
     if (extractedItems.length > 0) {
       onComplete(transactionId, extractedItems);
@@ -233,7 +186,6 @@ const ReceiptUploadModal = ({ transactionId, onClose, onComplete }: ReceiptUploa
   };
 
   const handleClose = () => {
-    stopCamera();
     onClose();
   };
 
@@ -269,42 +221,12 @@ const ReceiptUploadModal = ({ transactionId, onClose, onComplete }: ReceiptUploa
             <div>
               <h2 className="text-xl font-semibold text-foreground mb-2">Upload Receipt</h2>
               <p className="text-muted-foreground text-sm">
-                Capture or upload a receipt to automatically extract items and categorize them.
+                Upload a receipt image to automatically extract items and categorize them.
               </p>
             </div>
 
-            {/* Camera View */}
-            {isCameraMode && (
-              <div className="relative bg-black rounded-xl overflow-hidden">
-                <video
-                  ref={videoRef}
-                  autoPlay
-                  playsInline
-                  className="w-full h-64 object-cover"
-                />
-                <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-3">
-                  <Button
-                    onClick={capturePhoto}
-                    variant="primary"
-                    size="lg"
-                    className="rounded-full w-16 h-16"
-                  >
-                    <Camera className="w-6 h-6" />
-                  </Button>
-                  <Button
-                    onClick={stopCamera}
-                    variant="destructive"
-                    size="lg"
-                    className="rounded-full"
-                  >
-                    Cancel
-                  </Button>
-                </div>
-              </div>
-            )}
-
             {/* Preview */}
-            {preview && !isCameraMode && (
+            {preview && (
               <div className="relative">
                 <img
                   src={preview}
@@ -324,27 +246,17 @@ const ReceiptUploadModal = ({ transactionId, onClose, onComplete }: ReceiptUploa
               </div>
             )}
 
-            {/* Upload Options */}
-            {!preview && !isCameraMode && (
+            {/* Upload Option */}
+            {!preview && (
               <div className="space-y-3">
-                <div className="grid grid-cols-2 gap-3">
-                  <Button
-                    onClick={startCamera}
-                    variant="outline"
-                    className="h-24 flex-col gap-2"
-                  >
-                    <Camera className="w-6 h-6" />
-                    <span>Capture</span>
-                  </Button>
-                  <Button
-                    onClick={() => fileInputRef.current?.click()}
-                    variant="outline"
-                    className="h-24 flex-col gap-2"
-                  >
-                    <Upload className="w-6 h-6" />
-                    <span>Upload</span>
-                  </Button>
-                </div>
+                <Button
+                  onClick={() => fileInputRef.current?.click()}
+                  variant="outline"
+                  className="h-24 flex-col gap-2"
+                >
+                  <Upload className="w-6 h-6" />
+                  <span>Upload</span>
+                </Button>
                 <input
                   ref={fileInputRef}
                   type="file"

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Book, Headphones, Target, Camera, Pen, ChevronDown, ChevronUp } from "lucide-react";
+import { Book, Headphones, Target, Pen, ChevronDown, ChevronUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { Transaction } from "./TransactionsPage";
@@ -7,7 +7,6 @@ import type { Transaction } from "./TransactionsPage";
 interface RytMindDashboardProps {
   transactions: Transaction[];
   onFeatureClick: (feature: string) => void;
-  onReceiptUpload: (transactionId: string) => void;
   onManualEntry: (transactionId: string) => void;
 }
 
@@ -23,7 +22,7 @@ const spendingData = [
   { category: "Waste", percentage: 25, color: "bg-destructive" },
 ];
 
-const RytMindDashboard = ({ transactions, onFeatureClick, onReceiptUpload, onManualEntry }: RytMindDashboardProps) => {
+const RytMindDashboard = ({ transactions, onFeatureClick, onManualEntry }: RytMindDashboardProps) => {
   const [expandedTransactions, setExpandedTransactions] = useState<Set<string>>(new Set());
   const pendingTransactions = transactions.filter(t => !t.processed).slice(0, 3);
   const processedTransactions = transactions.filter(t => t.processed && t.items && t.items.length > 0).slice(0, 5);
@@ -99,20 +98,11 @@ const RytMindDashboard = ({ transactions, onFeatureClick, onReceiptUpload, onMan
                     <Button
                       variant="action"
                       size="sm"
-                      onClick={() => onReceiptUpload(transaction.id)}
-                      className="h-8"
-                    >
-                      <Camera className="w-4 h-4" />
-                      <span>Receipt</span>
-                    </Button>
-                    <Button
-                      variant="action"
-                      size="sm"
                       onClick={() => onManualEntry(transaction.id)}
                       className="h-8"
                     >
                       <Pen className="w-4 h-4" />
-                      <span>Manual</span>
+                      <span>Journal</span>
                     </Button>
                   </div>
                 </div>

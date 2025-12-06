@@ -3,7 +3,6 @@ import { useQuery, useMutation, useAction } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
 import Navbar from "@/components/layout/Navbar";
-import FloatingChatButton from "@/components/layout/FloatingChatButton";
 import PaymentsPage from "@/components/features/PaymentsPage";
 import TransactionsPage from "@/components/features/TransactionsPage";
 import RytMindDashboard from "@/components/features/RytMindDashboard";
@@ -246,7 +245,6 @@ const Index = () => {
 
   // Determine if we should show the navbar (hide for sub-pages)
   const showNavbar = ["payments", "transactions", "rytmind", "insights"].includes(activeView);
-  const showFAB = activeView !== "therapist";
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -260,8 +258,6 @@ const Index = () => {
         {activeView === "transactions" && (
           <TransactionsPage
             transactions={transactions}
-            onReceiptUpload={setReceiptModalId}
-            onManualEntry={setJournalModalId}
           />
         )}
 
@@ -269,7 +265,6 @@ const Index = () => {
           <RytMindDashboard
             transactions={transactions}
             onFeatureClick={handleFeatureClick}
-            onReceiptUpload={setReceiptModalId}
             onManualEntry={setJournalModalId}
           />
         )}
@@ -301,8 +296,6 @@ const Index = () => {
           <FinancialTherapistPage onBack={handleBackToRytMind} />
         )}
       </main>
-
-      {showFAB && <FloatingChatButton />}
 
       {/* Modals */}
       {receiptModalId && (

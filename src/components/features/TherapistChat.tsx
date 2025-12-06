@@ -55,7 +55,7 @@ const TherapistChat = ({ onClose }: TherapistChatProps) => {
   };
 
   return (
-    <div className="flex flex-col h-full bg-card rounded-2xl shadow-elevated overflow-hidden">
+    <div className="flex flex-col h-full max-h-[80vh] bg-card rounded-2xl shadow-elevated overflow-hidden">
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-border">
         <div className="flex items-center gap-3">
@@ -73,7 +73,7 @@ const TherapistChat = ({ onClose }: TherapistChatProps) => {
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div className="flex-1 max-h-[60vh] overflow-y-auto p-4 pr-2 space-y-4">
         {messages.map((message) => (
           <div
             key={message.id}

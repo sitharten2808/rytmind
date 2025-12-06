@@ -69,8 +69,18 @@ export const triggerAnalysis = action({
       }))
       .sort((a, b) => b.amount - a.amount);
 
-    // Prepare payload for Lindy
+    // Get the Convex site URL for the callback
+    // Set this in your Convex dashboard under Settings > Environment Variables
+    // e.g., SITE_URL = "https://your-deployment-name.convex.site"
+    const convexSiteUrl = process.env.SITE_URL;
+    if (!convexSiteUrl) {
+      throw new Error("SITE_URL environment variable is not set. Please set it in your Convex dashboard.");
+    }
+
+    // Prepare payload for Lindy (includes callbackUrl for async response)
+    // Include periodType in the URL so we don't rely on Lindy passing it back
     const payload = {
+      callbackUrl: `${convexSiteUrl}/lindy-webhook?periodType=${periodType}&totalSpending=${totalSpending}&transactionCount=${transactions.length}`,
       periodType,
       periodStart: startTimestamp,
       periodEnd: now,

@@ -13,19 +13,32 @@ http.route({
   handler: httpAction(async (ctx, request) => {
     try {
       const body = await request.json();
+      const url = new URL(request.url);
+      
+      // Log for debugging
+      console.log("=== LINDY WEBHOOK RECEIVED ===");
+      console.log("URL params:", url.searchParams.toString());
+      console.log("Body keys:", Object.keys(body));
 
-      // Validate the payload from Lindy
-      const {
-        periodType,
-        totalSpending,
-        transactionCount,
-        categoryBreakdown,
-        aiAnalysis,
-      } = body;
+      // Get periodType from URL query params (preferred) or body (fallback)
+      const periodType = url.searchParams.get("periodType") || body.periodType;
+      const totalSpending = parseFloat(url.searchParams.get("totalSpending") || "0") || body.totalSpending || 0;
+      const transactionCount = parseInt(url.searchParams.get("transactionCount") || "0") || body.transactionCount || 0;
+      const categoryBreakdown = body.categoryBreakdown || [];
+      const aiAnalysis = body.aiAnalysis;
+      
+      console.log("Extracted periodType:", periodType);
+      console.log("Has aiAnalysis:", !!aiAnalysis);
 
       if (!periodType || !aiAnalysis) {
+        console.log("VALIDATION FAILED - Missing fields");
         return new Response(
-          JSON.stringify({ error: "Missing required fields: periodType and aiAnalysis" }),
+          JSON.stringify({ 
+            error: "Missing required fields: periodType and aiAnalysis",
+            receivedPeriodType: periodType,
+            hasAiAnalysis: !!aiAnalysis,
+            urlParams: url.searchParams.toString()
+          }),
           { status: 400, headers: { "Content-Type": "application/json" } }
         );
       }
