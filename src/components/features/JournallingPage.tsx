@@ -593,7 +593,7 @@ How did today's spending make you feel? What emotions were behind your purchases
                             "text-xs px-2 py-0.5 rounded-full",
                             transaction.category === "Food" && "bg-accent/10 text-accent",
                             transaction.category === "Shopping" && "bg-primary/10 text-primary",
-                            transaction.category === "Transport" && "bg-secondary/10 text-secondary-foreground",
+                            transaction.category === "Transport" && "bg-destructive/10 text-secondary-foreground",
                             transaction.category === "Entertainment" && "bg-destructive/10 text-destructive",
                             transaction.category === "Bills" && "bg-muted text-muted-foreground",
                             (!transaction.category || transaction.category === "Others") && "bg-muted text-muted-foreground",
@@ -682,7 +682,7 @@ How did today's spending make you feel? What emotions were behind your purchases
                 <Textarea
                   value={newContent}
                   onChange={(e) => setNewContent(e.target.value)}
-                  placeholder={writingPrompts[Math.floor(Math.random() * writingPrompts.length)]}
+                  placeholder={writingPrompts.join("\n")}
                   className="min-h-[200px] resize-none text-base leading-relaxed pr-12"
                 />
                 <button
